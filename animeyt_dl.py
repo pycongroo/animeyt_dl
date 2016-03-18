@@ -1,5 +1,6 @@
 """Funciones para descarga de animeyt."""
 import sys
+import os
 sys.path.append("externals/pynet")
 
 import pynet as net
@@ -7,13 +8,15 @@ from bs4 import BeautifulSoup as Bs
 
 
 BASE_LINK = 'http://www.animeyt.tv/'
+DOWNLOAD_PATH = 'descargas'
+make_if_not_exists(DOWNLOAD_PATH)
 
 
 # ---------------------------------------------------
 # scrapping por serie
 
 def get_chapters_from_html(h_text):
-    b_text = Bs(h_text)
+    b_text = Bs(h_text, 'lxml')
     l_chapters = b_text.findAll(
         'div', {'class': 'serie-capitulos__list__item'})
     l_d_chapters = map(get_chapter_from_div, l_chapters)
@@ -42,13 +45,17 @@ def get_chapter_link(chapter_div):
 # Scrapping en capitulo
 
 
-def download_chapter(d_chapter):
-    download_url = get_download_link(d_chapter['link'])
-    net.download_file(download_url, d_chapter['title'])
+def download_chapter(path_anime, d_chapter):
+    path_chapter = "%s/%s.mp4" % (path_anime, d_chapter['title'])
+    if os.path.exists(path_chapter):
+        print "Ya existe %s" % path_chapter
+    else:
+        download_url = get_download_link(d_chapter['link'])
+        net.download_file(download_url, path_chapter)
 
 
 def get_download_link(chapter_link):
-    b_text = Bs(net.request_get(chapter_link).text)
+    b_text = Bs(net.request_get(chapter_link).text, 'lxml')
     download_url = b_text.find(
         'a', {'target': '_blank'}).get('href')
     return download_url
@@ -71,7 +78,7 @@ def search(criterio):
 
 
 def get_animes_from_html(h_text):
-    b_text = Bs(h_text)
+    b_text = Bs(h_text, 'lxml')
     l_anime_divs = b_text.findAll('article', {'class': 'anime'})
     l_d_animes = map(get_anime_from_div, l_anime_divs)
     return l_d_animes
@@ -152,3 +159,22 @@ def download_anime_from_url(anime_url, desde=None):
     for ch in l_d_chapters:
         print 'descargando %s' % ch['title']
         download_chapter(ch)
+
+def download_anime_from_dict(anime_dict, desde=None):
+    path_serie = "%s/%s" % (DOWNLOAD_PATH, anime_dict['title'])
+    make_if_not_exists(path_serie)
+    req_obj = net.request_get(anime_dict['link'])
+    if desde is None:
+        l_d_chapters = get_chapters_from_html(req_obj.text)
+    else:
+        l_d_chapters = get_chapters_from_html(req_obj.text)[desde:]
+    for ch in l_d_chapters:
+        print 'descargando %s' % ch['title']
+        download_chapter(path_serie, ch)
+
+def make_if_not_exists(dir_path):
+    if os.path.exists(dir_path):
+        print "Ya existe %s" % dir_path
+    else:
+        print "No existe %s" % dir_path
+        os.mkdir(dir_path)
