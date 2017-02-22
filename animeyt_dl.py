@@ -4,13 +4,13 @@ import os
 sys.path.append("externals/pynet")
 
 import pynet as net
+import re
 from bs4 import BeautifulSoup as Bs
 
 
 BASE_LINK = 'http://www.animeyt.tv/'
 DOWNLOAD_PATH = 'descargas'
-make_if_not_exists(DOWNLOAD_PATH)
-
+RE_LINK_URL_JS = re.compile('.*url = \"(.*?)\";.*')
 
 # ---------------------------------------------------
 # scrapping por serie
@@ -56,9 +56,19 @@ def download_chapter(path_anime, d_chapter):
 
 def get_download_link(chapter_link):
     b_text = Bs(net.request_get(chapter_link).text, 'lxml')
-    download_url = b_text.find(
-        'a', {'target': '_blank'}).get('href')
+    download_url_redir = b_text.find(
+        'a', {'target': '_blank'}, text='Descarga').get('href')
+    ## ubico enlace generado de descarga
+    download_url = get_link_by_link_page(download_url_redir)
     return download_url
+
+def get_link_by_link_page(dl_link):
+    b_text = Bs(net.request_get(dl_link).text, 'lxml')
+    script_tag = b_text.findAll('script')[1]
+    text_url = script_tag.string.split('\n')[8]
+    url_real = RE_LINK_URL_JS.match(text_url).groups()[0]
+    return url_real
+
 
 
 # -------------------------------------------------------------
@@ -158,7 +168,7 @@ def download_anime_from_url(anime_url, desde=None):
         l_d_chapters = get_chapters_from_html(req_obj.text)[desde:]
     for ch in l_d_chapters:
         print 'descargando %s' % ch['title']
-        download_chapter(ch)
+        download_chapter('%s/%s' % (DOWNLOAD_PATH, ch['title']), ch)
 
 def download_anime_from_dict(anime_dict, desde=None):
     path_serie = "%s/%s" % (DOWNLOAD_PATH, anime_dict['title'])
@@ -178,3 +188,6 @@ def make_if_not_exists(dir_path):
     else:
         print "No existe %s" % dir_path
         os.mkdir(dir_path)
+
+make_if_not_exists(DOWNLOAD_PATH)
+print "Usar funcion download_anime_from_dict"
