@@ -2,8 +2,10 @@
 import sys
 import os
 sys.path.append("externals/pynet")
+sys.path.append("externals/pynet/modules/")
 
 import pynet as net
+import colors as clrs
 import re
 from bs4 import BeautifulSoup as Bs
 
@@ -51,7 +53,15 @@ def download_chapter(path_anime, d_chapter):
         print "Ya existe %s" % path_chapter
     else:
         download_url = get_download_link(d_chapter['link'])
-        net.download_file(download_url, path_chapter)
+        try:
+            clrs.m_aviso("using native wget")
+            status = os.system('wget -O "%s" "%s"' % (path_chapter, download_url))
+            if (status != 0):
+                clrs.m_interr('\nCancelado wget')
+                os.system('rm "%s"' % path_chapter)
+        except Exception as e:
+            clrs.m_aviso("wget failed, trying requests package mode")
+            net.download_file(download_url, path_chapter)
 
 
 def get_download_link(chapter_link):
