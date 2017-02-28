@@ -3,7 +3,7 @@ import sys
 import os
 import re
 from bs4 import BeautifulSoup as Bs
-import externals.pynet as net
+import externals.pynet.pynet as net
 import externals.pynet.modules.colors as clrs
 
 
