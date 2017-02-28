@@ -1,0 +1,26 @@
+{%	load	staticfiles	%}
+<!DOCTYPE HTML>
+<html>
+<body>
+  Resultados de busqueda:
+  {% if results %}
+    <div>
+    {% if results|length > 1%}
+      Se encontraron {{results|length}} resultados
+    {% else %}
+      Se encontro un resultado
+    {% endif %}
+    </div>
+    {% for result in results %}
+      <div>
+        <b>{{result.title}}</b><br>
+        <img src={{ result.poster	}} alt={{result.link}} ></img>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div>
+      No se encontraron series
+    </div>
+  {% endif %}
+</body>
+</html>

@@ -63,3 +63,5 @@ target/
 
 #Personalizado
 descargas/*
+webui/loader/static/images/*.jpg
+webui/loader/static/images/*.jpeg

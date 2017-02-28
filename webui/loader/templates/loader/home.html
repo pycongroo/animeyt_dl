@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Buscador de series</title>
+  <script type="text/javascript">
+    function limpiar(control) {
+      control.value="";
+    }
+    function verificar() {
+      control = document.getElementById('criterio')
+      console.log('se presiono')
+      if (control.value.length==0){
+        alert("No hay texto")
+      } else {
+        document.getElementById('search_form').submit()
+      }
+    }
+    function setInput(){
+      crit = document.getElementById('criterio')
+      crit.onkeyup = function(e){
+        if (e.keycode==13){
+          verificar();
+        }
+      }
+      console.log("seteado ok");
+    }
+
+  </script>
+</head>
+<body onload="setInput()">
+  <form id="search_form" action="/search/" method="get">
+    <input id="criterio" type="text" onfocus="limpiar(this)" name="criterio" value=""><br>
+  </form>
+  <button onclick="verificar()">Buscar</button>
+</body>
+</html>
