@@ -1,13 +1,10 @@
 """Funciones para descarga de animeyt."""
 import sys
 import os
-sys.path.append("externals/pynet")
-sys.path.append("externals/pynet/modules/")
-
-import pynet as net
-import colors as clrs
 import re
 from bs4 import BeautifulSoup as Bs
+import externals.pynet as net
+import externals.pynet.modules.colors as clrs
 
 
 BASE_LINK = 'http://www.animeyt.tv/'
