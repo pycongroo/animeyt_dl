@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 """Funciones para descarga de animeyt."""
 import sys
 import os
 import re
+import cfscrape
+import time
 from bs4 import BeautifulSoup as Bs
 import externals.pynet.pynet as net
 import externals.pynet.modules.colors as clrs
@@ -11,8 +14,21 @@ BASE_LINK = 'http://www.animeyt.tv/'
 DOWNLOAD_PATH = 'descargas'
 RE_LINK_URL_JS = re.compile('.*url = \"(.*?)\";.*')
 
+
+SESION = net.NetHandler(cfscrape.create_scraper())
 # ---------------------------------------------------
 # scrapping por serie
+
+def preparar_scrapping():
+    clrs.m_aviso('Preparando contra CloudFlare...')
+    inicial = time.clock()
+    hreq=SESION.request_get('http://animeyt.tv')
+    final = time.clock()
+    clrs.m_aviso("Se tardó %s segundos" % str(round((final-inicial)*10000)))
+    if (hreq.status_code==200):
+        clrs.m_aviso('Completado')
+    else:
+        m_aviso('ocurrio un problema')
 
 def get_chapters_from_html(h_text):
     b_text = Bs(h_text, 'lxml')
@@ -54,15 +70,18 @@ def download_chapter(path_anime, d_chapter):
             clrs.m_aviso("using native wget")
             status = os.system('wget -O "%s" "%s"' % (path_chapter, download_url))
             if (status != 0):
+                print status
                 clrs.m_interr('\nCancelado wget')
                 os.system('rm "%s"' % path_chapter)
+            if (status == 2048):
+                0/0
         except Exception as e:
             clrs.m_aviso("wget failed, trying requests package mode")
-            net.download_file(download_url, path_chapter)
+            SESION.download_file(download_url, path_chapter)
 
 
 def get_download_link(chapter_link):
-    b_text = Bs(net.request_get(chapter_link).text, 'lxml')
+    b_text = Bs(SESION.request_get(chapter_link).text, 'lxml')
     download_url_redir = b_text.find(
         'a', {'target': '_blank'}, text='Descarga').get('href')
     ## ubico enlace generado de descarga
@@ -70,7 +89,7 @@ def get_download_link(chapter_link):
     return download_url
 
 def get_link_by_link_page(dl_link):
-    b_text = Bs(net.request_get(dl_link).text, 'lxml')
+    b_text = Bs(SESION.request_get(dl_link).text, 'lxml')
     script_tag = b_text.findAll('script')[1]
     text_url = script_tag.string.split('\n')[8]
     url_real = RE_LINK_URL_JS.match(text_url).groups()[0]
@@ -85,7 +104,7 @@ BUSQUEDA_LINK = BASE_LINK + 'busqueda'
 
 
 def search(criterio):
-    req_obj = net.request_get(
+    req_obj = SESION.request_get(
         '%s?terminos=%s' % (BUSQUEDA_LINK, criterio.replace(' ', '+')))
     l_d_anime = get_animes_from_html(req_obj.text)
     return l_d_anime
@@ -168,7 +187,7 @@ def get_tag(tag_span):
 
 
 def download_anime_from_url(anime_url, desde=None):
-    req_obj = net.request_get(anime_url)
+    req_obj = SESION.request_get(anime_url)
     if desde is None:
         l_d_chapters = get_chapters_from_html(req_obj.text)
     else:
@@ -180,7 +199,7 @@ def download_anime_from_url(anime_url, desde=None):
 def download_anime_from_dict(anime_dict, desde=None):
     path_serie = "%s/%s" % (DOWNLOAD_PATH, anime_dict['title'])
     make_if_not_exists(path_serie)
-    req_obj = net.request_get(anime_dict['link'])
+    req_obj = SESION.request_get(anime_dict['link'])
     if desde is None:
         l_d_chapters = get_chapters_from_html(req_obj.text)
     else:
@@ -198,3 +217,4 @@ def make_if_not_exists(dir_path):
 
 make_if_not_exists(DOWNLOAD_PATH)
 print "Usar funcion download_anime_from_dict"
+preparar_scrapping()
