@@ -203,7 +203,7 @@ def download_anime_from_dict(anime_dict, desde=None):
     if desde is None:
         l_d_chapters = get_chapters_from_html(req_obj.text)
     else:
-        l_d_chapters = get_chapters_from_html(req_obj.text)[desde:]
+        l_d_chapters = get_chapters_from_html(req_obj.text)[desde-1:]
     for ch in l_d_chapters:
         print 'descargando %s' % ch['title']
         download_chapter(path_serie, ch)
