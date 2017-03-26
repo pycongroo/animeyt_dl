@@ -47,7 +47,7 @@ def get_chapter_from_div(chapter_div):
 
 
 def get_chapter_title(chapter_div):
-    chapter_title = chapter_div.find('a').getText()
+    chapter_title = chapter_div.find('a').getText().replace('\n', ' ')
     return chapter_title
 
 
